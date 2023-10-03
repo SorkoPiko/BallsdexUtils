@@ -26,9 +26,9 @@ async def on_ready():
 
 @client.event
 async def on_message(message: discord.Message):
-	if message.author.id == 999736048596816014:
+	if message.author.id == 999736048596816014 or message.author.id == 609544328737456149:
 		if message.content == 'A wild countryball appeared!':
-			imageHash = imagehash.average_hash(Image.open(BytesIO(requests.get(message.attachments[0].url).content)))
+			imageHash = str(imagehash.average_hash(Image.open(BytesIO(requests.get(message.attachments[0].url).content))))
 
 			hashes = getHashes()
 
@@ -44,11 +44,15 @@ async def on_message(message: discord.Message):
 			if caughtMatch:
 				hashes = getHashes()
 				originalMessage = await message.channel.fetch_message(message.reference.message_id)
-				imageHash = imagehash.average_hash(Image.open(BytesIO(requests.get(originalMessage.attachments[0].url).content)))
+				imageHash = str(imagehash.average_hash(Image.open(BytesIO(requests.get(originalMessage.attachments[0].url).content))))
 
 				if imageHash in hashes:
-					hashes[imageHash]['names'].add(caughtMatch.group(1))
+					if caughtMatch.group(1) not in hashes[imageHash]['names']:
+						hashes[imageHash]['names'].append(caughtMatch.group(1))
 				else:
-					hashes[imageHash] = {'status': 'identified', 'names': {caughtMatch.group(1)}}
+					hashes[imageHash] = {'status': 'identified', 'names': [caughtMatch.group(1)]}
+				
+				await message.add_reaction('✅')
+				saveHashes(hashes)
 
 client.run(os.getenv('TOKEN'))
