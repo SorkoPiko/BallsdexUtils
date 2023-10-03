@@ -8,6 +8,7 @@ intents.message_content = True
 
 CAUGHT_PATTERN = r'<@!*\d+> You caught \*\*(.+)!\*\* \(`#(.+)`\)[\s\S]*'
 
+activity = discord.Streaming(name="Ballsdex Answers", url="https://twitch.tv/SorkoPiko")
 client = commands.Bot(command_prefix='bs!', intents=intents)
 
 def getHashes() -> dict[imagehash.ImageHash, dict['names': set[str]]]:
