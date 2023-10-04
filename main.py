@@ -48,8 +48,8 @@ async def on_ready():
 	await client.tree.sync()
 	print('We\'re in')
 
-@client.event
-async def on_message(message: discord.Message):
+@client.listen('on_message')
+async def ballsdexCheck(message: discord.Message):
 	if message.author.id == 999736048596816014:
 		if message.content == 'A wild countryball appeared!':
 			imageHash = str(hashImageURL(message.attachments[0].url))
