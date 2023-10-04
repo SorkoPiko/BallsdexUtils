@@ -123,19 +123,15 @@ async def info_autocomplete(interaction: discord.Interaction, current: str) -> t
 	nameDict = getNameDict()
 
 	if not current:
-		print([
-			discord.app_commands.Choice(name=ball, value=ball)
-			for ball in nameDict.keys()
-		])
 		return [
 			discord.app_commands.Choice(name=ball, value=ball)
 			for ball in nameDict.keys()
-		]
+		][:25]
 	return [
 		discord.app_commands.Choice(name=ball, value=ball)
 		for ball in nameDict.keys()
 		if ball.lower().startswith(current.lower())
-	]
+	][:25]
 
 @client.tree.command(name='identify')
 async def identify(interaction: discord.Interaction, ball: discord.Attachment):
