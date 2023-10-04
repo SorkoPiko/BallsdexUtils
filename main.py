@@ -41,7 +41,8 @@ def convertToImage(url: str) -> Image.Image:
 	return Image.open(BytesIO(requests.get(url).content))
 
 def getAverageColour(image: Image.Image) -> tuple[int, int, int]:
-	return np.average(np.average(cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR), axis=0), axis=0)
+	npArray = np.average(np.average(cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR), axis=0), axis=0)
+	return (npArray[0], npArray[1], npArray[2])
 
 def getNameDict():
 	nameDict = {}
