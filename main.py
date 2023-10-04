@@ -1,4 +1,4 @@
-import discord, imagehash, json, requests, re, os
+import discord, imagehash, json, requests, re, os, typing
 from discord.ext import commands
 from PIL import Image
 from io import BytesIO
@@ -33,12 +33,12 @@ def saveHashes(hashes: dict[imagehash.ImageHash, dict]) -> None:
 def hashImageURL(url: str) -> imagehash.ImageHash:
 	return imagehash.average_hash(Image.open(BytesIO(requests.get(url).content)))
 
-def identify(imageHash: imagehash.ImageHash):
-	hashes = getHashes()
-	if imageHash in hashes:
-		return hashes[imageHash]['names']
-	else:
-		return None
+def getNameDict():
+	nameDict = {}
+	for hash, info in getHashes().items():
+		for name in info['names']:
+			nameDict.update({name: hash})
+	return nameDict
 
 @client.event
 async def on_ready():
@@ -62,9 +62,10 @@ async def on_message(message: discord.Message):
 				# hashes[imageHash] = {'status': 'unidentified', 'message': message.id}
 		else:
 			caughtMatch = re.match(CAUGHT_PATTERN, message.content)
+			# for debugging purposes
+			# the message.content is empty for some reason
 			print(message.content)
-			print(message.flags)
-			print(caughtMatch)
+			print(message.id)
 			if caughtMatch:
 				print(caughtMatch.group(1))
 				print('match!!')
@@ -81,7 +82,7 @@ async def on_message(message: discord.Message):
 				
 				saveHashes(hashes)
 
-@client.tree.command()
+@client.tree.command(name='add')
 async def add(interaction: discord.Interaction, image: discord.Attachment, names: str):
 	if interaction.user.id == 609544328737456149:
 		imageHash = str(hashImageURL(image.url))
@@ -92,5 +93,25 @@ async def add(interaction: discord.Interaction, image: discord.Attachment, names
 			hashes[imageHash] = {'status': 'identified', 'names': set(names.split(','))}
 		saveHashes(hashes)
 		await interaction.response.send_message('Added!', ephemeral=True)
+
+@client.tree.command(name='info')
+async def info(interaction: discord.Interaction, ball: str):
+	nameDict = getNameDict()
+	await interaction.response.send_message()
+
+@info.autocomplete('ball')
+async def info_autocomplete(interaction: discord.Interaction, current: str) -> typing.List[discord.app_commands.Choice[str]]:
+	nameDict = getNameDict()
+
+	if not current:
+		return [
+			discord.app_commands.Choice(name=role, value=role)
+			for role in nameDict.keys()
+		]
+	return [
+		discord.app_commands.Choice(name=role, value=role)
+		for role in nameDict.keys()
+		if role.lower().startswith(current.lower())
+	]
 
 client.run(os.getenv('TOKEN'))
