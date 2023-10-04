@@ -2,6 +2,9 @@ import discord, imagehash, json, requests, re, os, typing
 from discord.ext import commands
 from PIL import Image
 from io import BytesIO
+from dotenv import load_dotenv
+
+load_dotenv()
 
 intents = discord.Intents.all()
 
@@ -62,10 +65,12 @@ async def on_message(message: discord.Message):
 				# hashes[imageHash] = {'status': 'unidentified', 'message': message.id}
 		else:
 			# using a fetched message because then we can see the message content
-			fetched = await message.channel.fetch_message(message.id)
-			caughtMatch = re.match(CAUGHT_PATTERN, fetched.content)
+			#message = await message.channel.fetch_message(message.id)
+			caughtMatch = re.match(CAUGHT_PATTERN, message.system_content)
+			print(message.system_content)
 			if caughtMatch:
-				originalMessage = await fetched.channel.fetch_message(fetched.reference.message_id)
+				print(f'Caught {caughtMatch.group(1)} ({message.id})')
+				originalMessage = await message.channel.fetch_message(message.reference.message_id)
 				imageHash = str(imagehash.average_hash(Image.open(BytesIO(requests.get(originalMessage.attachments[0].url).content))))
 				hashes = getHashes()
 
@@ -93,7 +98,11 @@ async def add(interaction: discord.Interaction, image: discord.Attachment, names
 @client.tree.command(name='info')
 async def info(interaction: discord.Interaction, ball: str):
 	nameDict = getNameDict()
-	await interaction.response.send_message()
+	embed = discord.Embed(title=f'{ball}', colour=discord.Colour.random())
+	embed.set_author(name=f'{interaction.user.display_name}', icon_url=interaction.user.display_avatar.url)
+	embed.add_field(name='Image Hash', value=nameDict[ball], inline=True)
+	embed.add_field(name='Names', value=', '.join(getHashes()[nameDict[ball]]['names']), inline=True)
+	await interaction.response.send_message(embed=embed)
 
 @info.autocomplete('ball')
 async def info_autocomplete(interaction: discord.Interaction, current: str) -> typing.List[discord.app_commands.Choice[str]]:
@@ -101,13 +110,13 @@ async def info_autocomplete(interaction: discord.Interaction, current: str) -> t
 
 	if not current:
 		return [
-			discord.app_commands.Choice(name=role, value=role)
-			for role in nameDict.keys()
+			discord.app_commands.Choice(name=ball, value=ball)
+			for ball in nameDict.keys()
 		]
 	return [
-		discord.app_commands.Choice(name=role, value=role)
-		for role in nameDict.keys()
-		if role.lower().startswith(current.lower())
+		discord.app_commands.Choice(name=ball, value=ball)
+		for ball in nameDict.keys()
+		if ball.lower().startswith(current.lower())
 	]
 
 client.run(os.getenv('TOKEN'))
