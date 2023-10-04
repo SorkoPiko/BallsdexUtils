@@ -1,8 +1,9 @@
-import discord, imagehash, json, requests, re, os, typing
+import discord, imagehash, json, requests, re, os, typing, cv2
 from discord.ext import commands
 from PIL import Image
 from io import BytesIO
 from dotenv import load_dotenv
+import numpy as np
 
 load_dotenv()
 
@@ -35,6 +36,12 @@ def saveHashes(hashes: dict[imagehash.ImageHash, dict]) -> None:
 
 def hashImageURL(url: str) -> imagehash.ImageHash:
 	return imagehash.average_hash(Image.open(BytesIO(requests.get(url).content)))
+
+def convertToImage(url: str) -> Image.Image:
+	return Image.open(BytesIO(requests.get(url).content))
+
+def getAverageColour(image: Image.Image) -> tuple[int, int, int]:
+	return np.average(np.average(cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR), axis=0), axis=0)
 
 def getNameDict():
 	nameDict = {}
@@ -110,12 +117,15 @@ async def info(interaction: discord.Interaction, ball: str):
 	embed.add_field(name='Image Hash', value=nameDict[ball], inline=True)
 	embed.add_field(name='Names', value=', '.join(getHashes()[nameDict[ball]]['names']), inline=True)
 	await interaction.response.send_message(embed=embed)
-
 @info.autocomplete('ball')
 async def info_autocomplete(interaction: discord.Interaction, current: str) -> typing.List[discord.app_commands.Choice[str]]:
 	nameDict = getNameDict()
 
 	if not current:
+		print([
+			discord.app_commands.Choice(name=ball, value=ball)
+			for ball in nameDict.keys()
+		])
 		return [
 			discord.app_commands.Choice(name=ball, value=ball)
 			for ball in nameDict.keys()
@@ -125,5 +135,16 @@ async def info_autocomplete(interaction: discord.Interaction, current: str) -> t
 		for ball in nameDict.keys()
 		if ball.lower().startswith(current.lower())
 	]
+
+@client.tree.command(name='identify')
+async def identify(interaction: discord.Interaction, ball: discord.Attachment):
+	imageHash = str(hashImageURL(ball.url))
+	rgbTuple = getAverageColour(convertToImage(ball))
+	embed = discord.Embed(title=f'{ball.filename}', colour=discord.Colour(rgbTuple[0] << 16 | rgbTuple[1] << 8 | rgbTuple[2]))
+	embed.set_thumbnail(url=ball.url)
+	embed.set_author(name=f'{interaction.user.display_name}', icon_url=interaction.user.display_avatar.url)
+	embed.add_field(name='Image Hash', value=imageHash, inline=True)
+	embed.add_field(name='Names', value=', '.join(getHashes()[getHashes()[imageHash]]['names']), inline=True)
+	await interaction.response.send_message(embed=embed)
 
 client.run(os.getenv('TOKEN'))
