@@ -61,16 +61,11 @@ async def on_message(message: discord.Message):
 				await message.add_reaction('🔄')
 				# hashes[imageHash] = {'status': 'unidentified', 'message': message.id}
 		else:
-			caughtMatch = re.match(CAUGHT_PATTERN, message.content)
-			# for debugging purposes
-			# the message.content is empty for some reason
-			print(message.id)
+			# using a fetched message because then we can see the message content
 			fetched = await message.channel.fetch_message(message.id)
-			print(fetched.content)
+			caughtMatch = re.match(CAUGHT_PATTERN, fetched.content)
 			if caughtMatch:
-				print(caughtMatch.group(1))
-				print('match!!')
-				originalMessage = await message.channel.fetch_message(message.reference.message_id)
+				originalMessage = await message.channel.fetch_message(fetched.reference.message_id)
 				imageHash = str(imagehash.average_hash(Image.open(BytesIO(requests.get(originalMessage.attachments[0].url).content))))
 				hashes = getHashes()
 
