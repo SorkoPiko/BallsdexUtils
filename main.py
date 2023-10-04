@@ -145,7 +145,7 @@ async def identify(interaction: discord.Interaction, ball: discord.Attachment):
 		return
 	rgbTuple = getAverageColour(convertToImage(ball))
 	embed = discord.Embed(title=f'{ball.filename}', colour=discord.Colour(rgbTuple[0] << 16 | rgbTuple[1] << 8 | rgbTuple[2]))
-	embed.set_thumbnail(url=ball.url)
+	embed.set_image(url=ball.url)
 	embed.set_author(name=f'{interaction.user.display_name}', icon_url=interaction.user.display_avatar.url)
 	embed.add_field(name='Image Hash', value=imageHash, inline=True)
 	embed.add_field(name='Names', value=', '.join(hashes[imageHash]['names']), inline=True)
