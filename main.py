@@ -77,6 +77,7 @@ async def ballsdexAdd(message: discord.Message):
 		# using a fetched message because then we can see the message content
 		#message = await message.channel.fetch_message(message.id)
 		print(type(message.content))
+		print(type(message))
 		fetchedMessage = await message.channel.fetch_message(message.id)
 		caughtMatch = re.match(CAUGHT_PATTERN, fetchedMessage.system_content)
 		print(fetchedMessage.system_content)
@@ -138,6 +139,9 @@ async def info_autocomplete(interaction: discord.Interaction, current: str) -> t
 async def identify(interaction: discord.Interaction, ball: discord.Attachment):
 	imageHash = str(hashImageURL(ball.url))
 	hashes = getHashes()
+	if imageHash not in hashes:
+		await interaction.response.send_message('Either that ball doesn\'t exist or I don\'t know it!\nIf it does exist, it\'ll be added as soon as someone catches it.')
+		return
 	rgbTuple = getAverageColour(convertToImage(ball))
 	embed = discord.Embed(title=f'{ball.filename}', colour=discord.Colour(rgbTuple[0] << 16 | rgbTuple[1] << 8 | rgbTuple[2]))
 	embed.set_thumbnail(url=ball.url)
