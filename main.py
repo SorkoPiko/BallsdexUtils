@@ -35,14 +35,14 @@ def saveHashes(hashes: dict[imagehash.ImageHash, dict]) -> None:
 		f.write(json.dumps(hashes, cls=CustomJSONEncoder))
 
 def hashImageURL(url: str) -> imagehash.ImageHash:
-	return imagehash.average_hash(Image.open(BytesIO(requests.get(url).content)))
+	return imagehash.average_hash(urlToImage(url))
 
-def convertToImage(url: str) -> Image.Image:
+def urlToImage(url: str) -> Image.Image:
 	return Image.open(BytesIO(requests.get(url).content))
 
-def getAverageColour(image: Image.Image) -> tuple[int, int, int]:
+def getAverageColour(image: Image.Image) -> int:
 	npArray = np.average(np.average(cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR), axis=0), axis=0)
-	return (int(npArray[0]), int(npArray[1]), int(npArray[2]))
+	return int(npArray[0]) << 16 | int(npArray[1]) << 8 | int(npArray[2])
 
 def getNameDict():
 	nameDict = {}
@@ -138,17 +138,32 @@ async def info_autocomplete(interaction: discord.Interaction, current: str) -> t
 
 @client.tree.command(name='identify')
 async def identify(interaction: discord.Interaction, ball: discord.Attachment):
+	if not ball.content_type.startswith('image'):
+		await interaction.response.send_message('Please attach an image to the command!', ephemeral=True)
+		return
 	imageHash = str(hashImageURL(ball.url))
 	hashes = getHashes()
 	if imageHash not in hashes:
 		await interaction.response.send_message('Either that ball doesn\'t exist or I don\'t know it!\nIf it does exist, it\'ll be added as soon as someone catches it.', ephemeral=True)
 		return
-	rgbTuple = getAverageColour(convertToImage(ball))
-	embed = discord.Embed(title=f'{ball.filename}', colour=discord.Colour(rgbTuple[0] << 16 | rgbTuple[1] << 8 | rgbTuple[2]))
+	rgbTuple = getAverageColour(urlToImage(ball))
+	embed = discord.Embed(title=f'{ball.filename}', colour=discord.Colour())
 	embed.set_image(url=ball.url)
 	embed.set_author(name=f'{interaction.user.display_name}', icon_url=interaction.user.display_avatar.url)
 	embed.add_field(name='Image Hash', value=imageHash, inline=True)
 	embed.add_field(name='Names', value=', '.join(hashes[imageHash]['names']), inline=True)
+	await interaction.response.send_message(embed=embed)
+
+@client.tree.command(name='hash')
+async def hash(interaction: discord.Interaction, image: discord.Attachment):
+	if not image.content_type.startswith('image'):
+		await interaction.response.send_message('Please attach an image to the command!', ephemeral=True)
+		return
+	imageHash = str(hashImageURL(image.url))
+	embed = discord.Embed(title=f'{image.filename}', colour=discord.Colour(getAverageColour(urlToImage(image))))
+	embed.set_image(url=image.url)
+	embed.set_author(name=f'{interaction.user.display_name}', icon_url=interaction.user.display_avatar.url)
+	embed.add_field(name='Image Hash', value=imageHash, inline=True)
 	await interaction.response.send_message(embed=embed)
 
 client.run(os.getenv('TOKEN'))
