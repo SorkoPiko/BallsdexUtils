@@ -84,17 +84,19 @@ async def ballsdexCheck(message: discord.Message):
 				
 				saveHashes(hashes)
 
-@client.tree.command(name='add')
-async def add(interaction: discord.Interaction, image: discord.Attachment, names: str):
-	if interaction.user.id == 609544328737456149:
-		imageHash = str(hashImageURL(image.url))
-		hashes = getHashes()
-		if imageHash in hashes:
-			hashes[imageHash]['names'].update(names.split(','))
-		else:
-			hashes[imageHash] = {'status': 'identified', 'names': set(names.split(','))}
-		saveHashes(hashes)
-		await interaction.response.send_message('Added!', ephemeral=True)
+@client.command(name='add')
+async def add(ctx: commands.Context, names: str):
+	if not ctx.message.attachments[0]:
+		await ctx.send('Please attach an image to the command!', ephemeral=True)
+		return
+	imageHash = str(hashImageURL(ctx.message.attachments[0].url))
+	hashes = getHashes()
+	if imageHash in hashes:
+		hashes[imageHash]['names'].update(names.split(','))
+	else:
+		hashes[imageHash] = {'status': 'identified', 'names': set(names.split(','))}
+	saveHashes(hashes)
+	await ctx.send(f'Added {names} to {imageHash}!', ephemeral=True)
 
 @client.tree.command(name='info')
 async def info(interaction: discord.Interaction, ball: str):
