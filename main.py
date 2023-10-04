@@ -64,8 +64,9 @@ async def on_message(message: discord.Message):
 			caughtMatch = re.match(CAUGHT_PATTERN, message.content)
 			# for debugging purposes
 			# the message.content is empty for some reason
-			print(message.content)
 			print(message.id)
+			fetched = await message.channel.fetch_message(message.id)
+			print(fetched.content)
 			if caughtMatch:
 				print(caughtMatch.group(1))
 				print('match!!')
