@@ -76,6 +76,7 @@ async def ballsdexAdd(message: discord.Message):
 	if message.author.id == 999736048596816014:
 		# using a fetched message because then we can see the message content
 		#message = await message.channel.fetch_message(message.id)
+		print(type(message.content))
 		fetchedMessage = await message.channel.fetch_message(message.id)
 		caughtMatch = re.match(CAUGHT_PATTERN, fetchedMessage.system_content)
 		print(fetchedMessage.system_content)
@@ -136,12 +137,13 @@ async def info_autocomplete(interaction: discord.Interaction, current: str) -> t
 @client.tree.command(name='identify')
 async def identify(interaction: discord.Interaction, ball: discord.Attachment):
 	imageHash = str(hashImageURL(ball.url))
+	hashes = getHashes()
 	rgbTuple = getAverageColour(convertToImage(ball))
 	embed = discord.Embed(title=f'{ball.filename}', colour=discord.Colour(rgbTuple[0] << 16 | rgbTuple[1] << 8 | rgbTuple[2]))
 	embed.set_thumbnail(url=ball.url)
 	embed.set_author(name=f'{interaction.user.display_name}', icon_url=interaction.user.display_avatar.url)
 	embed.add_field(name='Image Hash', value=imageHash, inline=True)
-	embed.add_field(name='Names', value=', '.join(getHashes()[imageHash]['names']), inline=True)
+	embed.add_field(name='Names', value=', '.join(getHashes[imageHash]['names']), inline=True)
 	await interaction.response.send_message(embed=embed)
 
 client.run(os.getenv('TOKEN'))
