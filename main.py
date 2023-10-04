@@ -84,7 +84,7 @@ async def ballsdexAdd(message: discord.Message):
 				hashes[imageHash] = {'status': 'identified', 'names': {caughtMatch.group(1)}}
 				await message.add_reaction('✅')
 		
-		saveHashes(hashes)
+			saveHashes(hashes)
 
 @client.command(name='add')
 @commands.is_owner()
