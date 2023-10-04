@@ -65,7 +65,7 @@ async def on_message(message: discord.Message):
 			fetched = await message.channel.fetch_message(message.id)
 			caughtMatch = re.match(CAUGHT_PATTERN, fetched.content)
 			if caughtMatch:
-				originalMessage = await message.channel.fetch_message(fetched.reference.message_id)
+				originalMessage = await fetched.channel.fetch_message(fetched.reference.message_id)
 				imageHash = str(imagehash.average_hash(Image.open(BytesIO(requests.get(originalMessage.attachments[0].url).content))))
 				hashes = getHashes()
 
