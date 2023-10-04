@@ -11,7 +11,7 @@ intents = discord.Intents.all()
 CAUGHT_PATTERN = r'<@!*\d+> You caught \*\*(.+)!\*\* \(`#(.+)`\)[\s\S]*'
 
 activity = discord.Streaming(name="Ballsdex Answers", url="https://twitch.tv/SorkoPiko")
-client = commands.Bot(command_prefix='?', intents=intents, activity=activity)
+client = commands.Bot(command_prefix='bs!', intents=intents, activity=activity)
 
 class CustomJSONEncoder(json.JSONEncoder):
 	def default(self, obj):
