@@ -66,11 +66,12 @@ async def on_message(message: discord.Message):
 		else:
 			# using a fetched message because then we can see the message content
 			#message = await message.channel.fetch_message(message.id)
-			caughtMatch = re.match(CAUGHT_PATTERN, message.system_content)
-			print(message.system_content)
+			fetchedMessage = await message.channel.fetch_message(message.id)
+			caughtMatch = re.match(CAUGHT_PATTERN, fetchedMessage.system_content)
+			print(fetchedMessage.system_content)
 			if caughtMatch:
-				print(f'Caught {caughtMatch.group(1)} ({message.id})')
-				originalMessage = await message.channel.fetch_message(message.reference.message_id)
+				print(f'Caught {caughtMatch.group(1)} ({fetchedMessage.id})')
+				originalMessage = await fetchedMessage.channel.fetch_message(message.reference.message_id)
 				imageHash = str(imagehash.average_hash(Image.open(BytesIO(requests.get(originalMessage.attachments[0].url).content))))
 				hashes = getHashes()
 
