@@ -87,6 +87,7 @@ async def ballsdexAdd(message: discord.Message):
 		saveHashes(hashes)
 
 @client.command(name='add')
+@commands.is_owner()
 async def add(ctx: commands.Context, names: str):
 	if not ctx.message.attachments[0]:
 		await ctx.send('Please attach an image to the command!', ephemeral=True)
