@@ -50,39 +50,41 @@ async def on_ready():
 
 @client.listen('on_message')
 async def ballsdexCheck(message: discord.Message):
-	if message.author.id == 999736048596816014:
-		if message.content == 'A wild countryball appeared!':
-			imageHash = str(hashImageURL(message.attachments[0].url))
+	if message.author.id == 999736048596816014 and message.content == 'A wild countryball appeared!':
+		imageHash = str(hashImageURL(message.attachments[0].url))
 
+		hashes = getHashes()
+
+		if imageHash in hashes and hashes[imageHash]['status'] == 'identified':
+			await message.add_reaction('✅')
+			await message.reply(f'Looks like {" or ".join([f"**{value}**" for value in hashes[imageHash]["names"]])}.')
+
+		else:
+			await message.add_reaction('🔄')
+			# hashes[imageHash] = {'status': 'unidentified', 'message': message.id}
+
+@client.listen('on_message')
+async def ballsdexAdd(message: discord.Message):
+	if message.author.id == 999736048596816014:
+		# using a fetched message because then we can see the message content
+		#message = await message.channel.fetch_message(message.id)
+		fetchedMessage = await message.channel.fetch_message(message.id)
+		caughtMatch = re.match(CAUGHT_PATTERN, fetchedMessage.system_content)
+		print(fetchedMessage.system_content)
+		if caughtMatch:
+			print(f'Caught {caughtMatch.group(1)} ({fetchedMessage.id})')
+			originalMessage = await fetchedMessage.channel.fetch_message(message.reference.message_id)
+			imageHash = str(imagehash.average_hash(Image.open(BytesIO(requests.get(originalMessage.attachments[0].url).content))))
 			hashes = getHashes()
 
-			if imageHash in hashes and hashes[imageHash]['status'] == 'identified':
+			if imageHash in hashes:
+				hashes[imageHash]['names'].add(caughtMatch.group(1))
 				await message.add_reaction('✅')
-				await message.reply(f'Looks like {" or ".join([f"**{value}**" for value in hashes[imageHash]["names"]])}.')
-
 			else:
-				await message.add_reaction('🔄')
-				# hashes[imageHash] = {'status': 'unidentified', 'message': message.id}
-		else:
-			# using a fetched message because then we can see the message content
-			#message = await message.channel.fetch_message(message.id)
-			fetchedMessage = await message.channel.fetch_message(message.id)
-			caughtMatch = re.match(CAUGHT_PATTERN, fetchedMessage.system_content)
-			print(fetchedMessage.system_content)
-			if caughtMatch:
-				print(f'Caught {caughtMatch.group(1)} ({fetchedMessage.id})')
-				originalMessage = await fetchedMessage.channel.fetch_message(message.reference.message_id)
-				imageHash = str(imagehash.average_hash(Image.open(BytesIO(requests.get(originalMessage.attachments[0].url).content))))
-				hashes = getHashes()
-
-				if imageHash in hashes:
-					hashes[imageHash]['names'].add(caughtMatch.group(1))
-					await message.add_reaction('✅')
-				else:
-					hashes[imageHash] = {'status': 'identified', 'names': {caughtMatch.group(1)}}
-					await message.add_reaction('✅')
-				
-				saveHashes(hashes)
+				hashes[imageHash] = {'status': 'identified', 'names': {caughtMatch.group(1)}}
+				await message.add_reaction('✅')
+		
+		saveHashes(hashes)
 
 @client.command(name='add')
 async def add(ctx: commands.Context, names: str):
