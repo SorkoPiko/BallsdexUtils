@@ -77,10 +77,11 @@ async def ballsdexAdd(messageEvent: discord.RawMessageUpdateEvent):
 		caughtMatch = re.match(CAUGHT_PATTERN, messageEvent.data['content'])
 		print(messageEvent.data['content'])
 		if caughtMatch:
+			print(messageEvent.data)
 			print(f'Caught {caughtMatch.group(1)} ({messageEvent.message_id})')
 			channel = await client.fetch_channel(messageEvent.channel_id)
 			message = await channel.fetch_message(messageEvent.message_id)
-			originalMessage = await channel.fetch_message(messageEvent.data['referenced_message']['id'])
+			originalMessage = await channel.fetch_message(messageEvent.data['message_reference']['message_id'])
 			imageHash = str(imagehash.average_hash(Image.open(BytesIO(requests.get(originalMessage.attachments[0].url).content))))
 			hashes = getHashes()
 
