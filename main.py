@@ -1,38 +1,22 @@
-import discord, imagehash, json, requests, re, os, typing, cv2, logging
+import discord, imagehash, requests, re, os, typing, cv2
 from discord.ext import commands
 from PIL import Image
 from io import BytesIO
 from dotenv import load_dotenv
 import numpy as np
+from pymongo import MongoClient
 
 load_dotenv()
-
+# Setup MongoDB connection
+client = MongoClient(os.getenv('MONGO_URI'))
+db = client['main']
+hashDB = db['hashes']
 intents = discord.Intents.all()
 
 CAUGHT_PATTERN = r'<@!*\d+> You caught \*\*(.+)!\*\* \(`#(.+)`\)[\s\S]*'
 
 activity = discord.Streaming(name="Ballsdex Answers", url="https://twitch.tv/SorkoPiko")
-client = commands.Bot(command_prefix='bs!', intents=intents, activity=activity)
-
-class CustomJSONEncoder(json.JSONEncoder):
-	def default(self, obj):
-		if isinstance(obj, set):
-			return {'__set__': list(obj)}
-		return super().default(obj)
-
-# Custom JSON decoder with support for sets
-def custom_decoder(dct):
-	if '__set__' in dct:
-		return set(dct['__set__'])
-	return dct
-
-def getHashes() -> dict[imagehash.ImageHash, dict]:
-	with open('db.json', 'r') as f:
-		return json.loads(f.read(), object_hook=custom_decoder)
-
-def saveHashes(hashes: dict[imagehash.ImageHash, dict]) -> None:
-	with open('db.json', 'w') as f:
-		f.write(json.dumps(hashes, cls=CustomJSONEncoder))
+bot = commands.Bot(command_prefix='bs!', intents=intents, activity=activity)
 
 def hashImageURL(url: str) -> imagehash.ImageHash:
 	return imagehash.average_hash(urlToImage(url))
@@ -45,77 +29,64 @@ def getAverageColour(image: Image.Image) -> int:
 	return int(npArray[0]) << 16 | int(npArray[1]) << 8 | int(npArray[2])
 
 def getNameDict():
-	nameDict = {}
-	for hash, info in getHashes().items():
-		for name in info['names']:
-			nameDict.update({name: hash})
+	nameDict: dict[str, set[str]] = {}
+	for document in hashDB.find({}):
+		for name in document['names']:
+			nameDict.update({name: document['_id']})
 	return nameDict
 
-@client.event
+def hamming_distance(x, y):
+  return bin(x ^ y).count('1')
+
+@bot.event
 async def on_ready():
-	await client.tree.sync()
+	await bot.tree.sync()
 	print('We\'re in')
 
-@client.listen('on_message')
+@bot.listen('on_message')
 async def ballsdexCheck(message: discord.Message):
 	if message.author.id == 999736048596816014 and message.content == 'A wild countryball appeared!':
 		imageHash = str(hashImageURL(message.attachments[0].url))
+		dbEntry = hashDB.find_one({'_id': imageHash})
 
-		hashes = getHashes()
-
-		if imageHash in hashes and hashes[imageHash]['status'] == 'identified':
+		if dbEntry:
 			await message.add_reaction('✅')
-			await message.reply(f'Looks like {" or ".join([f"**{value}**" for value in hashes[imageHash]["names"]])}.')
+			await message.reply(f'Looks like {" or ".join([f"**{value}**" for value in dbEntry["names"]])}.')
 
 		else:
 			await message.add_reaction('🔄')
-			# hashes[imageHash] = {'status': 'unidentified', 'message': message.id}
 
-@client.listen('on_raw_message_edit')
+@bot.listen('on_raw_message_edit')
 async def ballsdexAdd(messageEvent: discord.RawMessageUpdateEvent):
 	if messageEvent.data['author']['id'] == "999736048596816014":
 		caughtMatch = re.match(CAUGHT_PATTERN, messageEvent.data['content'])
 		if caughtMatch:
 			print(f'Caught {caughtMatch.group(1)} ({messageEvent.message_id})')
-			channel = await client.fetch_channel(messageEvent.channel_id)
+			channel = await bot.fetch_channel(messageEvent.channel_id)
 			message = await channel.fetch_message(messageEvent.message_id)
 			originalMessage = await channel.fetch_message(messageEvent.data['message_reference']['message_id'])
 			imageHash = str(imagehash.average_hash(Image.open(BytesIO(requests.get(originalMessage.attachments[0].url).content))))
-			hashes = getHashes()
 
-			if imageHash in hashes:
-				hashes[imageHash]['names'].add(caughtMatch.group(1))
+			dbEntry = hashDB.find_one({'_id': imageHash})
+
+			if dbEntry:
+				hashDB.update_one({'_id': imageHash}, {'$addToSet': {'names': caughtMatch.group(1)}})
 				await message.add_reaction('✅')
 			else:
-				hashes[imageHash] = {'status': 'identified', 'names': {caughtMatch.group(1)}}
+				hashDB.insert_one({'_id': imageHash, 'names': {caughtMatch.group(1)}})
 				await message.add_reaction('✅')
-		
-			saveHashes(hashes)
 
-@client.command(name='add')
-@commands.is_owner()
-async def add(ctx: commands.Context, *names: str):
-	names = ' '.join(names)
-	if not ctx.message.attachments[0]:
-		await ctx.send('Please attach an image to the command!', ephemeral=True)
-		return
-	imageHash = str(hashImageURL(ctx.message.attachments[0].url))
-	hashes = getHashes()
-	if imageHash in hashes:
-		hashes[imageHash]['names'].update(names.split(','))
-	else:
-		hashes[imageHash] = {'status': 'identified', 'names': set(names.split(','))}
-	saveHashes(hashes)
-	await ctx.send(f'Added {names} to {imageHash}!', ephemeral=True)
-
-@client.tree.command(name='info')
+@bot.tree.command(name='info')
 async def info(interaction: discord.Interaction, ball: str):
 	nameDict = getNameDict()
+	if ball not in nameDict:
+		await interaction.response.send_message('Either that ball doesn\'t exist or I don\'t know it!\nIf it does exist, it\'ll be added as soon as someone catches it.', ephemeral=True)
 	embed = discord.Embed(title=f'{ball}', colour=discord.Colour.random())
 	embed.set_author(name=f'{interaction.user.display_name}', icon_url=interaction.user.display_avatar.url)
 	embed.add_field(name='Image Hash', value=nameDict[ball], inline=True)
-	embed.add_field(name='Names', value=', '.join(getHashes()[nameDict[ball]]['names']), inline=True)
+	embed.add_field(name='Names', value=', '.join(hashDB.find_one({'_id': nameDict[ball]})['names']), inline=True)
 	await interaction.response.send_message(embed=embed)
+
 @info.autocomplete('ball')
 async def info_autocomplete(interaction: discord.Interaction, current: str) -> typing.List[discord.app_commands.Choice[str]]:
 	nameDict = getNameDict()
@@ -131,24 +102,28 @@ async def info_autocomplete(interaction: discord.Interaction, current: str) -> t
 		if ball.lower().startswith(current.lower())
 	][:25]
 
-@client.tree.command(name='identify')
+@bot.tree.command(name='identify')
+@discord.app_commands.describe(ball='The ball to identify.')
 async def identify(interaction: discord.Interaction, ball: discord.Attachment):
 	if not ball.content_type.startswith('image'):
 		await interaction.response.send_message('Please attach an image to the command!', ephemeral=True)
 		return
 	imageHash = str(hashImageURL(ball.url))
-	hashes = getHashes()
-	if imageHash not in hashes:
+
+	result = hashDB.find_one({'_id': imageHash})
+
+	if not result:
 		await interaction.response.send_message('Either that ball doesn\'t exist or I don\'t know it!\nIf it does exist, it\'ll be added as soon as someone catches it.', ephemeral=True)
 		return
 	embed = discord.Embed(title=f'{ball.filename}', colour=discord.Colour(getAverageColour(urlToImage(ball))))
 	embed.set_image(url=ball.url)
 	embed.set_author(name=f'{interaction.user.display_name}', icon_url=interaction.user.display_avatar.url)
 	embed.add_field(name='Image Hash', value=imageHash, inline=True)
-	embed.add_field(name='Names', value=', '.join(hashes[imageHash]['names']), inline=True)
+	embed.add_field(name='Names', value=', '.join(result['names']), inline=True)
 	await interaction.response.send_message(embed=embed)
 
-@client.tree.command(name='hash')
+@bot.tree.command(name='hash')
+@discord.app_commands.describe(image='The image to hash.')
 async def hash(interaction: discord.Interaction, image: discord.Attachment):
 	if not image.content_type.startswith('image'):
 		await interaction.response.send_message('Please attach an image to the command!', ephemeral=True)
@@ -160,4 +135,20 @@ async def hash(interaction: discord.Interaction, image: discord.Attachment):
 	embed.add_field(name='Image Hash', value=imageHash, inline=True)
 	await interaction.response.send_message(embed=embed)
 
-client.run(os.getenv('TOKEN'))
+@bot.tree.command(name='hammingDistance')
+@discord.app_commands.describe(image1='The first image to compare.', image2='The second image to compare.')
+async def hammingDistance(interaction: discord.Interaction, image: discord.Attachment, image2: discord.Attachment):
+	if not image.content_type.startswith('image') or not image2.content_type.startswith('image'):
+		await interaction.response.send_message('Please attach images to the command!', ephemeral=True)
+		return
+	imageHash = str(hashImageURL(image.url))
+	image2Hash = str(hashImageURL(image2.url))
+	embed = discord.Embed(title=f'{image.filename}', colour=discord.Colour(getAverageColour(urlToImage(image))))
+	embed.set_image(url=image2.url)
+	embed.set_thumbnail(url=image.url)
+	embed.set_author(name=f'{interaction.user.display_name}', icon_url=interaction.user.display_avatar.url)
+	embed.add_field(name='Image 1 Hash', value=imageHash, inline=True)
+	embed.add_field(name='Image 2 Hash', value=image2Hash, inline=True)
+	embed.add_field(name='Hamming Distance', value=hamming_distance(imageHash, image2Hash), inline=True)
+
+bot.run(os.getenv('TOKEN'))
