@@ -42,3 +42,6 @@ class Listeners(commands.Cog):
 				else:
 					self.bot.hashDB.insert_one({'_id': imageHash, 'names': {caughtMatch.group(1)}})
 					await message.add_reaction('✅')
+
+async def setup(bot: commands.AutoShardedBot):
+	await bot.add_cog(Listeners(bot))
