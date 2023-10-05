@@ -72,27 +72,24 @@ async def ballsdexCheck(message: discord.Message):
 			# hashes[imageHash] = {'status': 'unidentified', 'message': message.id}
 
 @client.listen('on_raw_message_edit')
-async def ballsdexAdd(message: discord.RawMessageUpdateEvent):
-	if message.data['author']['id'] == "999736048596816014":
-		print('edited message by ballsdex!')
-		if not message.cached_message:
-			channel = await client.fetch_channel(message.channel_id)
-			cached = await channel.fetch_message(message.message_id)
-		else: cached = message.cached_message
-		caughtMatch = re.match(CAUGHT_PATTERN, cached.content)
-		print(cached.content)
+async def ballsdexAdd(messageEvent: discord.RawMessageUpdateEvent):
+	if messageEvent.data['author']['id'] == "999736048596816014":
+		caughtMatch = re.match(CAUGHT_PATTERN, messageEvent.data['content'])
+		print(messageEvent.data['content'])
 		if caughtMatch:
-			print(f'Caught {caughtMatch.group(1)} ({cached.id})')
-			originalMessage = await cached.channel.fetch_message(cached.reference.message_id)
+			print(f'Caught {caughtMatch.group(1)} ({messageEvent.message_id})')
+			channel = await client.fetch_channel(messageEvent.channel_id)
+			message = await channel.fetch_message(messageEvent.message_id)
+			originalMessage = await channel.fetch_message(messageEvent.data['referenced_message']['id'])
 			imageHash = str(imagehash.average_hash(Image.open(BytesIO(requests.get(originalMessage.attachments[0].url).content))))
 			hashes = getHashes()
 
 			if imageHash in hashes:
 				hashes[imageHash]['names'].add(caughtMatch.group(1))
-				await cached.add_reaction('✅')
+				await message.add_reaction('✅')
 			else:
 				hashes[imageHash] = {'status': 'identified', 'names': {caughtMatch.group(1)}}
-				await cached.add_reaction('✅')
+				await message.add_reaction('✅')
 		
 			saveHashes(hashes)
 
