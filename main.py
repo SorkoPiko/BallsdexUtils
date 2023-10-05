@@ -75,9 +75,7 @@ async def ballsdexCheck(message: discord.Message):
 async def ballsdexAdd(messageEvent: discord.RawMessageUpdateEvent):
 	if messageEvent.data['author']['id'] == "999736048596816014":
 		caughtMatch = re.match(CAUGHT_PATTERN, messageEvent.data['content'])
-		print(messageEvent.data['content'])
 		if caughtMatch:
-			print(messageEvent.data)
 			print(f'Caught {caughtMatch.group(1)} ({messageEvent.message_id})')
 			channel = await client.fetch_channel(messageEvent.channel_id)
 			message = await channel.fetch_message(messageEvent.message_id)
