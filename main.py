@@ -146,8 +146,7 @@ async def identify(interaction: discord.Interaction, ball: discord.Attachment):
 	if imageHash not in hashes:
 		await interaction.response.send_message('Either that ball doesn\'t exist or I don\'t know it!\nIf it does exist, it\'ll be added as soon as someone catches it.', ephemeral=True)
 		return
-	rgbTuple = getAverageColour(urlToImage(ball))
-	embed = discord.Embed(title=f'{ball.filename}', colour=discord.Colour())
+	embed = discord.Embed(title=f'{ball.filename}', colour=discord.Colour(getAverageColour(urlToImage(ball))))
 	embed.set_image(url=ball.url)
 	embed.set_author(name=f'{interaction.user.display_name}', icon_url=interaction.user.display_avatar.url)
 	embed.add_field(name='Image Hash', value=imageHash, inline=True)
