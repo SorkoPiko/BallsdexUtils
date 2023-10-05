@@ -73,11 +73,13 @@ async def ballsdexCheck(message: discord.Message):
 
 @client.listen('on_raw_message_edit')
 async def ballsdexAdd(message: discord.RawMessageUpdateEvent):
-	if message.data['author']['id'] == 999736048596816014:
+	if message.data['author']['id'] == "999736048596816014":
+		print('edited message by ballsdex!')
 		if not message.cached_message:
 			cached: discord.Message = await client.fetch_channel(message.channel_id).fetch_message(message.message_id)
 		else: cached = message.cached_message
 		caughtMatch = re.match(CAUGHT_PATTERN, cached.content)
+		print(cached.content)
 		if caughtMatch:
 			print(f'Caught {caughtMatch.group(1)} ({cached.id})')
 			originalMessage = await cached.channel.fetch_message(cached.reference.message_id)
