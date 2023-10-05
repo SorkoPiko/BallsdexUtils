@@ -48,7 +48,7 @@ class BallsdexUtils(commands.AutoShardedBot):
 	async def on_ready(self):
 		await self.tree.sync()
 		for extension in EXTENSIONS:
-			self.load_extension(extension)
+			await self.load_extension(extension)
 		self.logger.info(f"Logged in as {self.user}")
 		print(f"Logged in as {self.user}")
 
