@@ -1,4 +1,4 @@
-import discord, typing
+import discord
 from discord.ext import commands
 from helper	import *
 from main import BallsdexUtils
