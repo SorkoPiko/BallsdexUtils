@@ -10,6 +10,7 @@ EXTENSIONS = [
 	'ext.hash',
 	'ext.ball',
 	'ext.listeners',
+	'ext.config',
 	'jishaku'
 ]
 
