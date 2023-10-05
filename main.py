@@ -75,7 +75,6 @@ async def ballsdexCheck(message: discord.Message):
 async def ballsdexAdd(message: discord.RawMessageUpdateEvent):
 	if message['author']['id'] == 999736048596816014:
 		if not message.cached_message:
-			cached = await message.channel.fetch_message(message.message_id)
 			cached: discord.Message = await client.fetch_channel(message.channel_id).fetch_message(message.message_id)
 		else: cached = message.cached_message
 		caughtMatch = re.match(CAUGHT_PATTERN, cached.content)
