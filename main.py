@@ -8,7 +8,6 @@ import numpy as np
 load_dotenv()
 
 intents = discord.Intents.all()
-handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
 
 CAUGHT_PATTERN = r'<@!*\d+> You caught \*\*(.+)!\*\* \(`#(.+)`\)[\s\S]*'
 
@@ -163,4 +162,4 @@ async def hash(interaction: discord.Interaction, image: discord.Attachment):
 	embed.add_field(name='Image Hash', value=imageHash, inline=True)
 	await interaction.response.send_message(embed=embed)
 
-client.run(os.getenv('TOKEN'), log_handler=handler, log_level=logging.DEBUG)
+client.run(os.getenv('TOKEN'))
