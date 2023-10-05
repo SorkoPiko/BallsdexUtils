@@ -58,5 +58,5 @@ class Ball(commands.GroupCog):
 		embed.add_field(name='Names', value=', '.join(result['names']), inline=True)
 		await interaction.response.send_message(embed=embed)
 
-async def setup(bot: commands.AutoShardedBot):
+async def setup(bot: BallsdexUtils):
 	await bot.add_cog(Ball(bot))

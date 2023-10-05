@@ -40,5 +40,5 @@ class Hash(commands.GroupCog):
 		embed.add_field(name='Image 2 Hash', value=image2Hash, inline=True)
 		embed.add_field(name='Hamming Distance', value=hamming_distance(imageHash, image2Hash), inline=True)
 	
-async def setup(bot: commands.AutoShardedBot):
+async def setup(bot: BallsdexUtils):
 	await bot.add_cog(Hash(bot))
