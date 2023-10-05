@@ -1,4 +1,4 @@
-import discord, imagehash, json, requests, re, os, typing, cv2
+import discord, imagehash, json, requests, re, os, typing, cv2, logging
 from discord.ext import commands
 from PIL import Image
 from io import BytesIO
@@ -8,6 +8,7 @@ import numpy as np
 load_dotenv()
 
 intents = discord.Intents.all()
+handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
 
 CAUGHT_PATTERN = r'<@!*\d+> You caught \*\*(.+)!\*\* \(`#(.+)`\)[\s\S]*'
 
@@ -71,29 +72,26 @@ async def ballsdexCheck(message: discord.Message):
 			await message.add_reaction('🔄')
 			# hashes[imageHash] = {'status': 'unidentified', 'message': message.id}
 
-@client.listen('on_message')
-async def ballsdexAdd(message: discord.Message):
-	if message.author.id == 999736048596816014:
-		# using a fetched message because then we can see the message content
-		#message = await message.channel.fetch_message(message.id)
-		print(type(message.content))
-		print(type(message))
-		print(message.__init__)
-		fetchedMessage = await message.channel.fetch_message(message.id)
-		caughtMatch = re.match(CAUGHT_PATTERN, fetchedMessage.system_content)
-		print(fetchedMessage.system_content)
+@client.listen('on_raw_message_edit')
+async def ballsdexAdd(message: discord.RawMessageUpdateEvent):
+	if message['author']['id'] == 999736048596816014:
+		if not message.cached_message:
+			cached = await message.channel.fetch_message(message.message_id)
+			cached: discord.Message = await client.fetch_channel(message.channel_id).fetch_message(message.message_id)
+		else: cached = message.cached_message
+		caughtMatch = re.match(CAUGHT_PATTERN, cached.content)
 		if caughtMatch:
-			print(f'Caught {caughtMatch.group(1)} ({fetchedMessage.id})')
-			originalMessage = await fetchedMessage.channel.fetch_message(message.reference.message_id)
+			print(f'Caught {caughtMatch.group(1)} ({cached.id})')
+			originalMessage = await cached.channel.fetch_message(cached.reference.message_id)
 			imageHash = str(imagehash.average_hash(Image.open(BytesIO(requests.get(originalMessage.attachments[0].url).content))))
 			hashes = getHashes()
 
 			if imageHash in hashes:
 				hashes[imageHash]['names'].add(caughtMatch.group(1))
-				await message.add_reaction('✅')
+				await cached.add_reaction('✅')
 			else:
 				hashes[imageHash] = {'status': 'identified', 'names': {caughtMatch.group(1)}}
-				await message.add_reaction('✅')
+				await cached.add_reaction('✅')
 		
 			saveHashes(hashes)
 
@@ -165,4 +163,4 @@ async def hash(interaction: discord.Interaction, image: discord.Attachment):
 	embed.add_field(name='Image Hash', value=imageHash, inline=True)
 	await interaction.response.send_message(embed=embed)
 
-client.run(os.getenv('TOKEN'))
+client.run(os.getenv('TOKEN'), log_handler=handler, log_level=logging.DEBUG)
