@@ -31,7 +31,7 @@ class Listeners(commands.Cog):
 		if int(messageEvent.data['author']['id']) == self.bot.BALLSDEX_ID:
 			caughtMatch = re.match(self.bot.CAUGHT_PATTERN, messageEvent.data['content'])
 			if caughtMatch:
-				print(f'Caught {caughtMatch.group(2)} ({messageEvent.message_id})')
+				self.bot.logger.info(f'Caught {caughtMatch.group(2)} ({messageEvent.message_id})')
 				channel = await self.bot.fetch_channel(messageEvent.channel_id)
 				message = await channel.fetch_message(messageEvent.message_id)
 				originalMessage = await channel.fetch_message(messageEvent.data['message_reference']['message_id'])
