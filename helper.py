@@ -4,15 +4,15 @@ from io import BytesIO
 from pymongo.collection import Collection
 
 class SetEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, set):
-            return {'__set__': list(obj)}
-        return super().default(obj)
+	def default(self, obj):
+		if isinstance(obj, set):
+			return {'__set__': list(obj)}
+		return super().default(obj)
 
 def set_decoder(dct):
-    if "__set__" in dct:
-        return set(dct["data"])
-    return dct
+	if "__set__" in dct:
+		return set(dct["__set__"])
+	return dct
 
 def hashImageURL(url: str) -> imagehash.ImageHash:
 	return imagehash.average_hash(urlToImage(url))
@@ -26,7 +26,8 @@ def getAverageColour(image: Image.Image) -> int:
 
 def getNameDict(hashDB) -> dict[str, set[str]]:
 	nameDict: dict[str, set[str]] = {}
-	for document in find({}, hashDB):
+	collection = find({}, hashDB)
+	for document in collection:
 		for name in document['names']:
 			nameDict.update({name: document['_id']})
 	return nameDict
@@ -49,12 +50,11 @@ def findOne(find: dict, collection: Collection):
 def updateOne(find: dict, update: dict, collection: Collection):
 	collection.update_one(find, json.loads(json.dumps(update, cls=SetEncoder)))
 
-def find(find: dict, collection: Collection):
-    result = collection.find(find)
+def find(query: dict, collection: Collection):
+	result = collection.find(query)
+	decoded_results = []
+	for doc in result:
+		decoded_data = json.loads(json.dumps(doc), object_hook=set_decoder)
+		decoded_results.append(decoded_data)
 
-    decoded_results = []
-    for doc in result:
-        decoded_data = json.loads(json.dumps(doc), object_hook=set_decoder)
-        decoded_results.append(decoded_data)
-
-    return decoded_results
+	return decoded_results
