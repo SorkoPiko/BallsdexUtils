@@ -35,7 +35,7 @@ def hamming_distance(x, y):
 	return bin(x ^ y).count('1')
 
 def insertOne(insert: dict, collection: Collection):
-	return collection.insert_one(json_data=json.dumps(insert, cls=SetEncoder))
+	return collection.insert_one(json.loads(json.dumps(insert, cls=SetEncoder)))
 
 def findOne(find: dict, collection: Collection):
 	return json.loads(json.dumps(collection.find_one(find)), object_hook=set_decoder)
