@@ -32,7 +32,13 @@ def getNameDict(hashDB) -> dict[str, set[str]]:
 	return nameDict
 
 def hamming_distance(x, y):
-	return bin(x ^ y).count('1')
+	binary_str1 = bin(int(x, 16))[2:].zfill(len(x) * 4)
+	binary_str2 = bin(int(y, 16))[2:].zfill(len(y) * 4)
+
+	# Calculate the Hamming distance
+	hamming_distance = sum(bit1 != bit2 for bit1, bit2 in zip(binary_str1, binary_str2))
+
+	return hamming_distance
 
 def insertOne(insert: dict, collection: Collection):
 	return collection.insert_one(json.loads(json.dumps(insert, cls=SetEncoder)))

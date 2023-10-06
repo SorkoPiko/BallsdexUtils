@@ -26,7 +26,7 @@ class Ball(commands.GroupCog):
 	@ball_info.autocomplete('ball')
 	async def info_autocomplete(self, interaction: discord.Interaction, current: str) -> typing.List[discord.app_commands.Choice[str]]:
 		nameDict = getNameDict(self.bot.hashDB)
-
+		print(nameDict)
 		if not current:
 			return [
 				discord.app_commands.Choice(name=ball, value=ball)

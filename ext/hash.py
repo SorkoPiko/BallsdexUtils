@@ -4,7 +4,7 @@ from helper	import *
 from main import BallsdexUtils
 from discord import app_commands
 
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 
 class Hash(commands.GroupCog):
 	def __init__(self, bot: BallsdexUtils):
@@ -39,6 +39,7 @@ class Hash(commands.GroupCog):
 		embed.add_field(name='Image 1 Hash', value=imageHash, inline=True)
 		embed.add_field(name='Image 2 Hash', value=image2Hash, inline=True)
 		embed.add_field(name='Hamming Distance', value=hamming_distance(imageHash, image2Hash), inline=True)
+		await interaction.response.send_message(embed=embed)
 	
 async def setup(bot: BallsdexUtils):
 	await bot.add_cog(Hash(bot))
