@@ -54,10 +54,8 @@ def insertOne(insert: dict, collection: Collection) -> InsertOneResult:
 def findOne(find: dict, collection: Collection) -> dict:
 	return json.loads(json.dumps(collection.find_one(find)), object_hook=set_decoder)
 
-def updateOne(find: dict, update: dict, type: str, collection: Collection) -> UpdateResult:
-	current = findOne(find, collection)
-	current.update(update[f'${type}'])
-	collection.update_one(find, json.loads(json.dumps({'$set': current}, cls=SetEncoder)))
+def updateOne(find: dict, update: dict, collection: Collection) -> UpdateResult:
+	collection.update_one(find, json.loads(json.dumps(update, cls=SetEncoder)))
 
 def find(query: dict, collection: Collection) -> list:
 	result = collection.find(query)
@@ -79,7 +77,7 @@ def configCheck(configDB: Collection, guildID: int) -> dict:
 	newConfig = DEFAULT_CONFIG.copy()
 	newConfig.update(current)
 	newConfig.pop('_id')
-	updateOne({'_id': guildID}, {'$set': newConfig}, 'set', configDB)
+	updateOne({'_id': guildID}, {'$set': newConfig}, configDB)
 	return _configGet(configDB, guildID)
 
 def _configCreate(configDB: Collection, guildID: int, customConfig: dict=DEFAULT_CONFIG) -> int:
