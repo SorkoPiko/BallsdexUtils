@@ -32,7 +32,6 @@ class Ball(commands.GroupCog):
 		if ball not in nameDict:
 			await interaction.response.send_message('Either that ball doesn\'t exist or I don\'t know it!\nIf it does exist, it\'ll be added as soon as someone catches it.', ephemeral=True)
 		embed = discord.Embed(title=f'{ball}', colour=discord.Colour.random())
-		embed.set_author(name=f'{interaction.user.display_name}', icon_url=interaction.user.display_avatar.url)
 		embed.add_field(name='Image Hash', value=nameDict[ball], inline=True)
 		embed.add_field(name='Names', value=', '.join(findOne({'_id': nameDict[ball]}, self.bot.hashDB)['names']), inline=True)
 		await interaction.response.send_message(embed=embed)
@@ -52,9 +51,24 @@ class Ball(commands.GroupCog):
 			return
 		embed = discord.Embed(title=f'{ball.filename}', colour=discord.Colour(getAverageColour(urlToImage(ball))))
 		embed.set_image(url=ball.url)
-		embed.set_author(name=f'{interaction.user.display_name}', icon_url=interaction.user.display_avatar.url)
 		embed.add_field(name='Image Hash', value=imageHash, inline=True)
 		embed.add_field(name='Names', value=', '.join(result['names']), inline=True)
+		await interaction.response.send_message(embed=embed)
+
+	@app_commands.command(name='compare', description='Compare two balls\' hashes.')
+	@app_commands.describe(ball1='The first ball to compare.', ball2='The second ball to compare.')
+	@app_commands.autocomplete(ball1=info_autocomplete, ball2=info_autocomplete)
+	async def ball_compare(self, interaction: discord.Interaction, ball1: str, ball2: str):
+		nameDict = getNameDict(self.bot.hashDB)
+		if ball1 not in nameDict or ball2 not in nameDict:
+			await interaction.response.send_message('Either that ball doesn\'t exist or I don\'t know it!\nIf it does exist, it\'ll be added as soon as someone catches it.', ephemeral=True)
+			return
+		ball1Hash = nameDict[ball1]
+		ball2Hash = nameDict[ball2]
+		embed = discord.Embed(title=f'Hash Compare', colour=discord.Colour.random())
+		embed.add_field(name='Image 1 Hash', value=ball1Hash, inline=True)
+		embed.add_field(name='Image 2 Hash', value=ball2Hash, inline=True)
+		embed.add_field(name='Hamming Distance', value=hamming_distance(ball1Hash, ball2Hash), inline=True)
 		await interaction.response.send_message(embed=embed)
 
 async def setup(bot: BallsdexUtils):

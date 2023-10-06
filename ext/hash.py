@@ -20,7 +20,6 @@ class Hash(commands.GroupCog):
 		imageHash = str(hashImageURL(image.url))
 		embed = discord.Embed(title=f'{image.filename}', colour=discord.Colour(getAverageColour(urlToImage(image))))
 		embed.set_image(url=image.url)
-		embed.set_author(name=f'{interaction.user.display_name}', icon_url=interaction.user.display_avatar.url)
 		embed.add_field(name='Image Hash', value=imageHash, inline=True)
 		await interaction.response.send_message(embed=embed)
 
@@ -35,7 +34,6 @@ class Hash(commands.GroupCog):
 		embed = discord.Embed(title=f'Hash Compare', colour=discord.Colour(getAverageColour(urlToImage(image1))))
 		embed.set_image(url=image2.url)
 		embed.set_thumbnail(url=image1.url)
-		embed.set_author(name=f'{interaction.user.display_name}', icon_url=interaction.user.display_avatar.url)
 		embed.add_field(name='Image 1 Hash', value=imageHash, inline=True)
 		embed.add_field(name='Image 2 Hash', value=image2Hash, inline=True)
 		embed.add_field(name='Hamming Distance', value=hamming_distance(imageHash, image2Hash), inline=True)

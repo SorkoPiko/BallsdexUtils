@@ -41,11 +41,11 @@ class Listeners(commands.Cog):
 				config = configCheck(self.bot.configDB, messageEvent.guild_id)
 
 				if dbEntry:
-					updateOne({'_id': imageHash}, {'$addToSet': {'names': {caughtMatch.group(1)}}}, self.bot.hashDB)
+					updateOne({'_id': imageHash}, {'$addToSet': {'names': {caughtMatch.group(2)}}}, self.bot.hashDB)
 					if config['reactions']:
 						await message.add_reaction('✅')
 				else:
-					insertOne({'_id': imageHash, 'names': {caughtMatch.group(1)}}, self.bot.hashDB)
+					insertOne({'_id': imageHash, 'names': {caughtMatch.group(2)}}, self.bot.hashDB)
 					if config['reactions']:
 						await message.add_reaction('🆕')
 
