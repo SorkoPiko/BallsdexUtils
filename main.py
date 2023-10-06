@@ -17,10 +17,11 @@ EXTENSIONS = [
 class BallsdexUtils(commands.AutoShardedBot):
 	def __init__(self):
 		self.client = MongoClient(os.getenv('MONGO_URI'))
-		self.db = self.client['main']
-		self.hashDB = self.db['hashes']
-		self.settingsDB = self.db['settings']
-		self.CAUGHT_PATTERN = r'<@!*\d+> You caught \*\*(.+)!\*\* \(`#(.+)`\)[\s\S]*'
+		self.mainDB = self.client['main']
+		self.lbDB = self.mainDB['leaderboard']
+		self.hashDB = self.mainDB['hashes']
+		self.configDB = self.mainDB['config']
+		self.CAUGHT_PATTERN = r'<@!*(\d+)> You caught \*\*(.+)!\*\* \(`#(.+)`\)[\s\S]*'
 		self.BALLSDEX_ID = 999736048596816014
 		intents=discord.Intents.default()
 		intents.message_content = True

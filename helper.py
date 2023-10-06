@@ -1,7 +1,14 @@
-import imagehash, requests, cv2, numpy as np, json
+import imagehash, requests, cv2, numpy as np, json, typing
 from PIL import Image
 from io import BytesIO
 from pymongo.collection import Collection
+from pymongo.results import InsertOneResult, UpdateResult
+
+DEFAULT_CONFIG = {
+	'name': False,
+	'reactions': True,
+	}
+BASE_POINTS = 1
 
 class SetEncoder(json.JSONEncoder):
 	def default(self, obj):
@@ -41,16 +48,18 @@ def hamming_distance(x, y):
 
 	return hamming_distance
 
-def insertOne(insert: dict, collection: Collection):
+def insertOne(insert: dict, collection: Collection) -> InsertOneResult:
 	return collection.insert_one(json.loads(json.dumps(insert, cls=SetEncoder)))
 
-def findOne(find: dict, collection: Collection):
+def findOne(find: dict, collection: Collection) -> dict:
 	return json.loads(json.dumps(collection.find_one(find)), object_hook=set_decoder)
 
-def updateOne(find: dict, update: dict, collection: Collection):
-	collection.update_one(find, json.loads(json.dumps(update, cls=SetEncoder)))
+def updateOne(find: dict, update: dict, type: str, collection: Collection) -> UpdateResult:
+	current = findOne(find, collection)
+	current.update(update[f'${type}'])
+	collection.update_one(find, json.loads(json.dumps({'$set': current}, cls=SetEncoder)))
 
-def find(query: dict, collection: Collection):
+def find(query: dict, collection: Collection) -> list:
 	result = collection.find(query)
 	decoded_results = []
 	for doc in result:
@@ -58,3 +67,27 @@ def find(query: dict, collection: Collection):
 		decoded_results.append(decoded_data)
 
 	return decoded_results
+
+def _configGet(configDB: Collection, id) -> dict:
+	return findOne({'_id': id}, configDB)
+
+def configCheck(configDB: Collection, guildID: int) -> dict:
+	current = _configGet(configDB, guildID)
+	if not current:
+		_configCreate(configDB, guildID)
+		current = _configGet(configDB, guildID)
+	newConfig = DEFAULT_CONFIG.copy()
+	newConfig.update(current)
+	newConfig.pop('_id')
+	updateOne({'_id': guildID}, {'$set': newConfig}, 'set', configDB)
+	return _configGet(configDB, guildID)
+
+def _configCreate(configDB: Collection, guildID: int, customConfig: dict=DEFAULT_CONFIG) -> int:
+	customConfig['_id'] = guildID
+	return insertOne(customConfig, configDB).inserted_id
+
+def _configCheck(configDB: Collection, guildID: int) -> dict:
+	return findOne({'_id': guildID}, configDB) is not None
+
+def rarityCalc(rarity):
+    return round(BASE_POINTS / rarity, 2)
