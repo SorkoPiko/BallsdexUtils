@@ -4,7 +4,7 @@ from helper	import *
 from main import BallsdexUtils
 from discord import app_commands
 
-VERSION = "0.4.0"
+VERSION = "0.5.0"
 
 class Hash(commands.GroupCog):
 	def __init__(self, bot: BallsdexUtils):
@@ -32,7 +32,7 @@ class Hash(commands.GroupCog):
 			return
 		imageHash = str(hashImageURL(image1.url))
 		image2Hash = str(hashImageURL(image2.url))
-		embed = discord.Embed(title=f'{image1.filename}', colour=discord.Colour(getAverageColour(urlToImage(image1))))
+		embed = discord.Embed(title=f'Hash Compare', colour=discord.Colour(getAverageColour(urlToImage(image1))))
 		embed.set_image(url=image2.url)
 		embed.set_thumbnail(url=image1.url)
 		embed.set_author(name=f'{interaction.user.display_name}', icon_url=interaction.user.display_avatar.url)
