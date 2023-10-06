@@ -15,10 +15,10 @@ class Config(commands.GroupCog):
 	@app_commands.describe(enabled='Whether to show the name or not.')
 	async def config_name(self, interaction: discord.Interaction, enabled: bool):
 		if enabled:
-			self.bot.settingsDB.update_one({'_id': interaction.guild_id}, {'$set': {'name': True}})
+			updateOne({'_id': interaction.guild_id}, {'$set': {'name': True}}, self.bot.settingsDB)
 			await interaction.response.send_message('Enabled showing the name.', ephemeral=True)
 		else:
-			self.bot.settingsDB.update_one({'_id': interaction.guild_id}, {'$set': {'name': False}})
+			updateOne({'_id': interaction.guild_id}, {'$set': {'name': False}}, self.bot.settingsDB)
 			await interaction.response.send_message('Disabled showing the name.', ephemeral=True)
 
 async def setup(bot: BallsdexUtils):

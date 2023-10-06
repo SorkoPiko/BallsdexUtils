@@ -20,7 +20,7 @@ class Ball(commands.GroupCog):
 		embed = discord.Embed(title=f'{ball}', colour=discord.Colour.random())
 		embed.set_author(name=f'{interaction.user.display_name}', icon_url=interaction.user.display_avatar.url)
 		embed.add_field(name='Image Hash', value=nameDict[ball], inline=True)
-		embed.add_field(name='Names', value=', '.join(self.bot.hashDB.find_one({'_id': nameDict[ball]})['names']), inline=True)
+		embed.add_field(name='Names', value=', '.join(findOne({'_id': nameDict[ball]}, self.bot.hashDB)['names']), inline=True)
 		await interaction.response.send_message(embed=embed)
 
 	@ball_info.autocomplete('ball')
@@ -46,7 +46,7 @@ class Ball(commands.GroupCog):
 			return
 		imageHash = str(hashImageURL(ball.url))
 
-		result = self.bot.hashDB.find_one({'_id': imageHash})
+		result = findOne({'_id': imageHash}, self.bot.hashDB)
 
 		if not result:
 			await interaction.response.send_message('Either that ball doesn\'t exist or I don\'t know it!\nIf it does exist, it\'ll be added as soon as someone catches it.', ephemeral=True)

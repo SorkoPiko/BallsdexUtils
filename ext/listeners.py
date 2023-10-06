@@ -14,8 +14,8 @@ class Listeners(commands.Cog):
 	async def ballsdexCheck(self, message: discord.Message):
 		if message.author.id == self.bot.BALLSDEX_ID and message.content == 'A wild countryball appeared!':
 			imageHash = str(hashImageURL(message.attachments[0].url))
-			dbEntry = self.bot.hashDB.find_one({'_id': imageHash})
-			config = self.bot.settingsDB.find_one({'_id': message.guild.id})
+			dbEntry = findOne({'_id': imageHash}, self.bot.hashDB)
+			config = findOne({'_id': message.guild.id}, self.bot.settingsDB)
 
 			if config['name']:
 				if dbEntry:
@@ -35,18 +35,18 @@ class Listeners(commands.Cog):
 				originalMessage = await channel.fetch_message(messageEvent.data['message_reference']['message_id'])
 				imageHash = str(imagehash.average_hash(Image.open(BytesIO(requests.get(originalMessage.attachments[0].url).content))))
 
-				dbEntry = self.bot.hashDB.find_one({'_id': imageHash})
+				dbEntry = findOne({'_id': imageHash}, self.bot.hashDB)
 
 				if dbEntry:
-					self.bot.hashDB.update_one({'_id': imageHash}, {'$addToSet': {'names': caughtMatch.group(1)}})
+					updateOne({'_id': imageHash}, {'$addToSet': {'names': caughtMatch.group(1)}}, self.bot.hashDB)
 					await message.add_reaction('✅')
 				else:
-					self.bot.hashDB.insert_one({'_id': imageHash, 'names': {caughtMatch.group(1)}})
+					insertOne({'_id': imageHash, 'names': {caughtMatch.group(1)}}, self.bot.hashDB)
 					await message.add_reaction('✅')
 
 	@commands.Cog.listener('on_guild_join')
 	async def configSetup(self, guild: discord.Guild):
-		self.bot.settingsDB.insert_one({'_id': guild.id, 'name': False})
+		insertOne({'_id': guild.id, 'name': False}, self.bot.settingsDB)
 	
 	@commands.Cog.listener('on_guild_remove')
 	async def configRemove(self, guild: discord.Guild):
