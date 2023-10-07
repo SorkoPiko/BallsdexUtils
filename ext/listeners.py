@@ -3,7 +3,7 @@ from discord.ext import commands
 from helper	import *
 from main import BallsdexUtils
 
-VERSION = "1.1.2"
+VERSION = "1.2.0"
 
 class Listeners(commands.Cog):
 	def __init__(self, bot: BallsdexUtils):
