@@ -11,6 +11,7 @@ EXTENSIONS = [
 	'ext.ball',
 	'ext.listeners',
 	'ext.config',
+	'ext.admin',
 	'jishaku'
 ]
 
