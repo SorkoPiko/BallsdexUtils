@@ -57,6 +57,11 @@ def findOne(find: dict, collection: Collection) -> dict:
 def updateOne(find: dict, update: dict, collection: Collection) -> UpdateResult:
 	collection.update_one(find, json.loads(json.dumps(update, cls=SetEncoder)))
 
+def updateNames(find: dict, update: dict, collection: Collection) -> UpdateResult:
+	current = findOne(find, collection)
+	current.update(update)
+	updateOne(find, {'$set': json.loads(json.dumps(current, cls=SetEncoder))}, collection)
+
 def find(query: dict, collection: Collection) -> list:
 	result = collection.find(query)
 	decoded_results = []
