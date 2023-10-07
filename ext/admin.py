@@ -1,8 +1,7 @@
-import discord
+#import discord
 from discord.ext import commands
 from helper	import *
 from main import BallsdexUtils
-from discord import app_commands
 
 VERSION = "0.1.0"
 
@@ -19,3 +18,6 @@ class Admin(commands.Cog):
 		except commands.ExtensionNotLoaded:
 			self.bot.load_extension(f'ext.{cog}')
 		await ctx.send(f'Reloaded {cog}!')
+
+async def setup(bot: BallsdexUtils):
+	await bot.add_cog(Admin(bot))
