@@ -20,6 +20,7 @@ class BallsdexUtils(commands.AutoShardedBot):
 		self.mainDB = self.client['main']
 		self.lbDB = self.mainDB['leaderboard']
 		self.hashDB = self.mainDB['hashes']
+		self.raritiesDB = self.mainDB['rarity']
 		self.configDB = self.mainDB['config']
 		self.CAUGHT_PATTERN = r'<@!*(\d+)> You caught \*\*(.+)!\*\* \(`#(.+)`\)[\s\S]*'
 		self.BALLSDEX_ID = 999736048596816014
