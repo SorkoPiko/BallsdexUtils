@@ -3,6 +3,7 @@ from PIL import Image
 from io import BytesIO
 from pymongo.collection import Collection
 from pymongo.results import InsertOneResult, UpdateResult
+from fractions import Fraction
 
 DEFAULT_CONFIG = {
 	'name': False,
@@ -54,8 +55,8 @@ def insertOne(insert: dict, collection: Collection) -> InsertOneResult:
 def findOne(find: dict, collection: Collection) -> dict:
 	return json.loads(json.dumps(collection.find_one(find)), object_hook=set_decoder)
 
-def updateOne(find: dict, update: dict, collection: Collection) -> UpdateResult:
-	collection.update_one(find, json.loads(json.dumps(update, cls=SetEncoder)))
+def updateOne(find: dict, update: dict, collection: Collection, upsert: bool=False) -> UpdateResult:
+	collection.update_one(find, json.loads(json.dumps(update, cls=SetEncoder)), upsert=upsert)
 
 def updateNames(find: dict, update: dict, collection: Collection) -> UpdateResult:
 	current = findOne(find, collection)
@@ -92,5 +93,8 @@ def _configCreate(configDB: Collection, guildID: int, customConfig: dict=DEFAULT
 def _configCheck(configDB: Collection, guildID: int) -> dict:
 	return findOne({'_id': guildID}, configDB) is not None
 
-def rarityCalc(rarity):
-    return round(BASE_POINTS / rarity, 2)
+def rarityCalc(rarity: float, shiny: bool=False):
+	extra = 1
+	if shiny:
+		extra = 1/2048
+	return round(BASE_POINTS / rarity / extra, 2)

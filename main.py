@@ -23,7 +23,7 @@ class BallsdexUtils(commands.AutoShardedBot):
 		self.hashDB = self.mainDB['hashes']
 		self.raritiesDB = self.mainDB['rarity']
 		self.configDB = self.mainDB['config']
-		self.CAUGHT_PATTERN = r'<@!*(\d+)> You caught \*\*(.+)!\*\* \(`#(.+)`\)[\s\S]*'
+		self.CAUGHT_PATTERN = r'<@!*(\d+)> You caught \*\*(.+)!\*\* \(`#(.+)`\)([\s\S]*)'
 		self.BALLSDEX_ID = 999736048596816014
 		intents=discord.Intents.default()
 		intents.message_content = True

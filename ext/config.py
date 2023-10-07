@@ -39,5 +39,22 @@ class Config(commands.GroupCog):
 			updateOne({'_id': interaction.guild_id}, {'$set': {'name': False}}, self.bot.configDB)
 			await interaction.response.send_message('Disabled showing the name.', ephemeral=True)
 
+	@app_commands.command(name='reactions', description='Add reactions.')
+	@app_commands.describe(enabled='Whether to add reactions or not.')
+	async def config_reactions(self, interaction: discord.Interaction, enabled: bool):
+		configCheck(self.bot.configDB, interaction.guild_id)
+		if enabled:
+			updateOne({'_id': interaction.guild_id}, {'$set': {'reactions': True}}, self.bot.configDB)
+			await interaction.response.send_message('Enabled adding reactions.', ephemeral=True)
+		else:
+			updateOne({'_id': interaction.guild_id}, {'$set': {'reactions': False}}, self.bot.configDB)
+			await interaction.response.send_message('Disabled adding reactions.', ephemeral=True)
+
+	@app_commands.command(name='reset', description='Reset the config.')
+	async def config_reset(self, interaction: discord.Interaction):
+		self.bot.configDB.delete_one({'_id': interaction.guild_id})
+		configCheck(self.bot.configDB, interaction.guild_id)
+		await interaction.response.send_message('Reset the config.', ephemeral=True)
+
 async def setup(bot: BallsdexUtils):
 	await bot.add_cog(Config(bot))

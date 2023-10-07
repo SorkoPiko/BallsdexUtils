@@ -22,7 +22,7 @@ class Listeners(commands.Cog):
 					await message.reply(f'Looks like {" or ".join([f"**{value}**" for value in dbEntry["names"]])}.')
 					if config['reactions']:
 						await message.add_reaction('✅')
-					updateOne({'_id': message.guild.id}, {'$inc': {'count': 1}}, self.bot.raritiesDB)
+					updateOne({'_id': message.guild.id}, {'$inc': {'count': 1}}, self.bot.raritiesDB, True)
 				else:
 					if config['reactions']:
 						await message.add_reaction('🆕')
@@ -49,7 +49,7 @@ class Listeners(commands.Cog):
 					insertOne({'_id': imageHash, 'names': {caughtMatch.group(2)}}, self.bot.hashDB)
 					if config['reactions']:
 						await message.add_reaction('🆕')
-					updateOne({'_id': messageEvent.guild_id}, {'$inc': {'count': 1}}, self.bot.raritiesDB)
+					updateOne({'_id': imageHash}, {'$inc': {'count': 1}}, self.bot.raritiesDB, True)
 
 async def setup(bot: BallsdexUtils):
 	await bot.add_cog(Listeners(bot))
