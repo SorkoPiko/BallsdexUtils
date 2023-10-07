@@ -66,8 +66,8 @@ class Ball(commands.GroupCog):
 		ball1Hash = nameDict[ball1]
 		ball2Hash = nameDict[ball2]
 		embed = discord.Embed(title=f'Hash Compare', colour=discord.Colour.random())
-		embed.add_field(name='Image 1 Hash', value=ball1Hash, inline=True)
-		embed.add_field(name='Image 2 Hash', value=ball2Hash, inline=True)
+		embed.add_field(name=f'{ball1} Hash', value=ball1Hash, inline=True)
+		embed.add_field(name=f'{ball2} Hash', value=ball2Hash, inline=True)
 		embed.add_field(name='Hamming Distance', value=hamming_distance(ball1Hash, ball2Hash), inline=True)
 		await interaction.response.send_message(embed=embed)
 
