@@ -22,7 +22,7 @@ class Listeners(commands.Cog):
 					await message.reply(f'Looks like {" or ".join([f"**{value}**" for value in dbEntry["names"]])}.')
 					if config['reactions']:
 						await message.add_reaction('✅')
-					updateOne({'_id': message.guild.id}, {'$inc': {'count': 1}}, self.bot.raritiesDB, True)
+					updateOne({'_id': imageHash}, {'$inc': {'count': 1}}, self.bot.raritiesDB, True)
 				else:
 					if config['reactions']:
 						await message.add_reaction('🆕')
