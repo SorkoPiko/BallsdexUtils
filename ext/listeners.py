@@ -29,7 +29,7 @@ class Listeners(commands.Cog):
 
 	@commands.Cog.listener('on_raw_message_edit')
 	async def ballsdexAdd(self, messageEvent: discord.RawMessageUpdateEvent):
-		if int(messageEvent.data['author']['id']) == self.bot.BALLSDEX_ID or int(messageEvent.data['author']['id']) == 609544328737456149:
+		if int(messageEvent.data['author']['id']) == self.bot.BALLSDEX_ID:
 			caughtMatch = re.match(self.bot.CAUGHT_PATTERN, messageEvent.data['content'])
 			if caughtMatch:
 				self.bot.logger.info(f'Caught {caughtMatch.group(2)} ({messageEvent.message_id})')
