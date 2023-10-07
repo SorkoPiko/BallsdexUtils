@@ -26,6 +26,8 @@ class Listeners(commands.Cog):
 				else:
 					if config['reactions']:
 						await message.add_reaction('🆕')
+					# delete all rarity data if it's a new ball, so as not to get false data
+					self.bot.raritiesDB.delete_many({})
 
 	@commands.Cog.listener('on_raw_message_edit')
 	async def ballsdexAdd(self, messageEvent: discord.RawMessageUpdateEvent):
@@ -49,6 +51,8 @@ class Listeners(commands.Cog):
 					insertOne({'_id': imageHash, 'names': {caughtMatch.group(2)}}, self.bot.hashDB)
 					if config['reactions']:
 						await message.add_reaction('🆕')
+					# delete all rarity data if it's a new ball, so as not to get false data
+					self.bot.raritiesDB.delete_many({})
 					updateOne({'_id': imageHash}, {'$inc': {'count': 1}}, self.bot.raritiesDB, True)
 
 async def setup(bot: BallsdexUtils):
