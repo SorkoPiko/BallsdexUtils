@@ -24,13 +24,13 @@ class Hash(commands.GroupCog):
 		await interaction.response.send_message(embed=embed)
 
 	@app_commands.command(name='compare', description='Compare two images\' hashes.')
-	@app_commands.describe(image1='The first image to compare.', image2='The second image to compare.')
-	async def hash_compare(self, interaction: discord.Interaction, image1: discord.Attachment, image2: discord.Attachment):
+	@app_commands.describe(image1='The first image to compare.', image2='The second image to compare.', size='The size of the hashes to compare. (Default 8)')
+	async def hash_compare(self, interaction: discord.Interaction, image1: discord.Attachment, image2: discord.Attachment, size: int=8):
 		if not image1.content_type.startswith('image') or not image2.content_type.startswith('image'):
 			await interaction.response.send_message('Please attach images to the command!', ephemeral=True)
 			return
-		imageHash = str(hashImageURL(image1.url))
-		image2Hash = str(hashImageURL(image2.url))
+		imageHash = str(hashImageURL(image1.url, size))
+		image2Hash = str(hashImageURL(image2.url, size))
 		embed = discord.Embed(title=f'Hash Compare', colour=discord.Colour(getAverageColour(urlToImage(image1))))
 		embed.set_image(url=image2.url)
 		embed.set_thumbnail(url=image1.url)

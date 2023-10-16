@@ -22,8 +22,8 @@ def set_decoder(dct):
 		return set(dct["__set__"])
 	return dct
 
-def hashImageURL(url: str) -> imagehash.ImageHash:
-	return imagehash.average_hash(urlToImage(url))
+def hashImageURL(url: str, size: int=8) -> imagehash.ImageHash:
+	return imagehash.average_hash(urlToImage(url), hash_size=size)
 
 def urlToImage(url: str) -> Image.Image:
 	return Image.open(BytesIO(requests.get(url).content))
