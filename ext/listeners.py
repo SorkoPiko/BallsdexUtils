@@ -43,8 +43,10 @@ class Listeners(commands.Cog):
 				dbEntry = findOne({'_id': imageHash}, self.bot.hashDB)
 				config = configCheck(self.bot.configDB, messageEvent.guild_id)
 
-				if dbEntry:
-					updateNames({'_id': imageHash}, {'names': {caughtMatch.group(2)}}, self.bot.hashDB)
+				names = dbEntry['names'] if dbEntry else set()
+
+				if names:
+					updateNames({'_id': imageHash}, {'names': names.add(caughtMatch.group(2))}, self.bot.hashDB)
 					if config['reactions']:
 						await message.add_reaction('✅')
 				else:
